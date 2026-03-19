@@ -15,7 +15,7 @@ with st.sidebar:
     default_query = 'all:""'
     search_query = st.text_input("検索キーワード", value=default_query)
     max_results = st.number_input("取得件数", min_value=10, max_value=200, value=50, step=10)
-    filename_query = st.text_input("ファイル名", value=search_query)
+    filename_query = st.text_input("ファイル名", value="selected_papers")
     
     search_btn = st.button("検索を実行")
 
@@ -48,7 +48,13 @@ if "papers_data" not in st.session_state:
 
 if search_btn:
     with st.spinner("論文を取得中..."):
+        # 【追加】新しい検索を実行した際、過去のチェックボックスの状態をリセットする
+        for key in list(st.session_state.keys()):
+            if key.startswith("check_"):
+                del st.session_state[key]
+                
         st.session_state.papers_data = fetch_papers(search_query, max_results)
+        
     if st.session_state.papers_data:
         st.success(f"{len(st.session_state.papers_data)}件の論文を取得しました！右側のリストから確認してください。")
     else:
@@ -58,6 +64,24 @@ if search_btn:
 if st.session_state.papers_data:
     st.markdown("### 📝 検索結果（要約を読んでチェックを入れてください）")
     
+    # 【追加】一括選択・解除ボタン
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("✅ 全ての論文を選択"):
+            # Streamlitが管理するキーを直接Trueに書き換えて再描画
+            for i in range(len(st.session_state.papers_data)):
+                st.session_state[f"check_{i}"] = True
+            st.rerun()
+            
+    with col2:
+        if st.button("❌ 全ての選択を解除"):
+            # Streamlitが管理するキーを直接Falseに書き換えて再描画
+            for i in range(len(st.session_state.papers_data)):
+                st.session_state[f"check_{i}"] = False
+            st.rerun()
+            
+    st.markdown("---")
+
     marked_papers = []
     
     # 取得した論文を1つずつアコーディオン（開閉式）で表示
@@ -65,7 +89,7 @@ if st.session_state.papers_data:
         # タイトルと発行年を見出しにする
         with st.expander(f"📄 [{paper['Year']}] {paper['Title']}"):
             
-            # 【機能2】ワンクリック・マーキング
+            # 【機能2】ワンクリック・マーキング（Streamlitが状態を自動管理）
             is_checked = st.checkbox("✅ この論文を保存リストに入れる", key=f"check_{i}")
             if is_checked:
                 marked_papers.append(paper)
@@ -74,27 +98,6 @@ if st.session_state.papers_data:
             st.write(f"**Authors:** {paper['Authors']}")
             st.markdown(f"**【Abstract】**\n> {paper['Abstract']}")
             st.write(f"[🔗 PDFを開く]({paper['URL']})")
-
-# --- メインエリア：一括操作ボタン ---
-if st.session_state.papers_data:
-    st.subheader("操作パネル")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("✅ 全ての論文を選択"):
-            # システム管理下のキー（chk_番号）を直接 True にする
-            for i in range(len(st.session_state.papers_data)):
-                st.session_state[f"chk_{i}"] = True
-            st.rerun()
-
-    with col2:
-        if st.button("❌ 全ての選択を解除"):
-            # システム管理下のキー（chk_番号）を直接 False にする
-            for i in range(len(st.session_state.papers_data)):
-                st.session_state[f"chk_{i}"] = False
-            st.rerun()
-
-    st.markdown("---")
 
     # --- 5. CSVダウンロード機能 ---
     st.markdown("---")
@@ -105,9 +108,12 @@ if st.session_state.papers_data:
         df = pd.DataFrame(marked_papers)
         csv_data = df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
         
+        # ファイル名が空欄の場合はデフォルト名を適用する処理
+        out_filename = str(filename_query) + ".csv" if filename_query else "selected_papers.csv"
+        
         st.download_button(
             label="📥 チェックした論文をCSVでダウンロード",
             data=csv_data,
-            file_name=str(filename_query) + ".csv",
+            file_name=out_filename,
             mime="text/csv"
         )
