@@ -74,6 +74,24 @@ if st.session_state.papers_data:
             st.write(f"**Authors:** {paper['Authors']}")
             st.markdown(f"**【Abstract】**\n> {paper['Abstract']}")
             st.write(f"[🔗 PDFを開く]({paper['URL']})")
+# --- メインエリア：一括操作ボタン ---
+if st.session_state.papers_data:
+    st.subheader("操作パネル")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("✅ 全ての論文を選択"):
+            for i in range(len(st.session_state.papers_data)):
+                st.session_state.marks[f"c_{i}"] = True
+            st.rerun() # 画面を再描画して反映
+
+    with col2:
+        if st.button("❌ 全ての選択を解除"):
+            for i in range(len(st.session_state.papers_data)):
+                st.session_state.marks[f"c_{i}"] = False
+            st.rerun()
+
+    st.markdown("---")
 
     # --- 5. CSVダウンロード機能 ---
     st.markdown("---")
