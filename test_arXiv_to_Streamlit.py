@@ -77,19 +77,21 @@ if st.session_state.papers_data:
 
 # --- メインエリア：一括操作ボタン ---
 if st.session_state.papers_data:
-    st.subheader("全選択")
+    st.subheader("操作パネル")
     col1, col2 = st.columns(2)
     
     with col1:
         if st.button("✅ 全ての論文を選択"):
+            # システム管理下のキー（chk_番号）を直接 True にする
             for i in range(len(st.session_state.papers_data)):
-                st.session_state.marks[f"c_{i}"] = True
-            st.rerun() # 画面を再描画して反映
+                st.session_state[f"chk_{i}"] = True
+            st.rerun()
 
     with col2:
         if st.button("❌ 全ての選択を解除"):
+            # システム管理下のキー（chk_番号）を直接 False にする
             for i in range(len(st.session_state.papers_data)):
-                st.session_state.marks[f"c_{i}"] = False
+                st.session_state[f"chk_{i}"] = False
             st.rerun()
 
     st.markdown("---")
