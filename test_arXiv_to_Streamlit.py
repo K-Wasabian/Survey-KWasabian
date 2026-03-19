@@ -12,9 +12,10 @@ with st.sidebar:
     st.info("💡 コツ: 文章ではなく、短いキーワードを AND で繋いでください。")
     
     # おすすめのデフォルト検索式をセット
-    default_query = 'all:"open quantum system" AND all:"non-Markovian"'
+    default_query = 'all:""'
     search_query = st.text_input("検索キーワード", value=default_query)
     max_results = st.number_input("取得件数", min_value=10, max_value=200, value=50, step=10)
+    filename_query = st.text_input("ファイル名", value=search_query)
     
     search_btn = st.button("検索を実行")
 
@@ -86,6 +87,6 @@ if st.session_state.papers_data:
         st.download_button(
             label="📥 チェックした論文をCSVでダウンロード",
             data=csv_data,
-            file_name="selected_papers.csv",
+            file_name=str(filename_query) + ".csv",
             mime="text/csv"
         )
